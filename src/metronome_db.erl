@@ -16,5 +16,5 @@ priv_dir(App)->
 init() ->
     ok = erlang:load_nif(priv_dir(metronome)++"/metronome_drv", 0), true.
 
-update(Key, Incr, Ttl, TimestampNow)-> {error, nif_not_loaded}.
-gc(TimestampNow) -> ok.
+update(_key, _incr, _ttl, _timestamp_now)-> {error, nif_not_loaded}.
+gc(_timestamp_now) -> ok.
