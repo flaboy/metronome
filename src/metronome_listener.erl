@@ -72,7 +72,6 @@ accecptor(#state{factory=Factory} = S, Top)->
         receive
             {'EXIT',Pid, Stat} -> Top ! {decrement, self(), Stat}
         end
-    catch _:Error->
-        erlang:display({?FILE,?LINE,Error}),
-        Top ! {decrement, self(), Error}
+    catch _:Reason->
+        Top ! {decrement, self(), Reason}
     end.

@@ -4,11 +4,11 @@
 #include <stdio.h>
 
 char keybuff[KEY_MAX_LEN];
-int hash_n(char * key){
-    int i, hash=0;
-    for(i=0;i<KEY_MAX_LEN;i++){
-        if(key[i] == 0) break;
-        hash = key[i] + (hash << 5);
+int hash_n(const char * key){
+    unsigned int hash=0;
+    const char *p;
+    for(p=key;*p;p++){
+        hash = hash * 33 + *p;
     }
     return hash % BUCKET_SIZE;
 }
@@ -17,29 +17,36 @@ metronome_item * new_item(char * key){
     metronome_item * item = enif_alloc(sizeof(metronome_item));
     bzero(item, sizeof(metronome_item));
     strcpy(item->key, key);
+    //enif_fprintf(stderr, "new:: %s=%d\n", key, item );
     return item;
 }
 
-metronome_item * walk_hash(metronome_item * start, int timestamp, char * key, int * result){
-    metronome_item * item = start, *prev=start;
+metronome_item * walk_hash(metronome_item ** start, int timestamp, char * key, int force_delete){
+    metronome_item *item = *start, **prev=start, *next;
+    
     while(item){
         if(key!=NULL && 0 == strcmp(item->key,key) ){
-            *result = 1;
             return item;
         }
         
         //如果过期，删除！
-        if( item->timestamp + item->ttl > timestamp ){
-            prev = item;
+        next = item->next;
+        if(force_delete!=1 && item->timestamp + item->ttl > timestamp ){
+            prev = &item->next;
         }else{
-            prev->next = item->next;
+            *prev = next;
             enif_free(item);
+            //enif_fprintf(stderr, "freed:: %d\n", item);
         }
-        item = item->next;
+        item = next;
     }
     
-    *result = 0;
-    return prev;
+    if(key==NULL){
+        return *start;
+    }else{
+        *prev = new_item(key);
+        return *prev;    
+    }
 }
 
 struct metronome_item * find_in_hash(char * key, int timestamp){
@@ -50,14 +57,7 @@ struct metronome_item * find_in_hash(char * key, int timestamp){
         return hashmap[hash];
     }
     
-    int succ = 0;
-    metronome_item * item = walk_hash(hashmap[hash], timestamp, key, &succ);
-    if(succ==1){
-        return item;
-    }else{
-        item->next = new_item(key);
-        return item->next;
-    }
+    return walk_hash(&hashmap[hash], timestamp, key, 0);
 }
 
 //key, incr, ttl, timestamp
@@ -79,7 +79,7 @@ static ERL_NIF_TERM update(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]){
         item->timestamp = timestamp;
     }
 
-    //enif_fprintf(stderr, "point:: addr:%d, value:%d, time:%d\r\n", p, p->value, p->timestamp );
+    //
     return enif_make_int(env, item->value);
 }
 
@@ -88,15 +88,31 @@ static ERL_NIF_TERM gc(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]){
     CHECK(enif_get_int(env, argv[0], &timestamp));
     for(i=0;i<BUCKET_SIZE;i++){
         if(hashmap[i]>0){
-            walk_hash(hashmap[i],timestamp,NULL,&rt);
+            walk_hash(&hashmap[i],timestamp,NULL, 0);
         }
     }
     return enif_make_atom(env, "ok");
 }
 
+static ERL_NIF_TERM clear(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]){
+    int i=0 , rt=0 , timestamp = 0;
+    for(i=0;i<BUCKET_SIZE;i++){
+        if(hashmap[i]>0){
+            walk_hash(&hashmap[i],0,NULL, 1);
+        }
+    }
+    return enif_make_atom(env, "ok");
+}
+
+static ERL_NIF_TERM is_loaded(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]){
+    return enif_make_atom(env, "true");
+}
+
 static ErlNifFunc nif_funcs[] = {
     {"update", 4, update},
-    {"gc", 1, gc}
+    {"gc", 1, gc},
+    {"clear", 0, clear},
+    {"is_loaded", 0, is_loaded}
 };
 
 ERL_NIF_INIT(metronome_db, nif_funcs, NULL, NULL, NULL, NULL)

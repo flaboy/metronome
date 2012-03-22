@@ -1,7 +1,9 @@
 -module(metronome_db).
 -export([init/0,
         update/4,
-        gc/1]).
+        gc/1,
+        clear/0,
+        is_loaded/0]).
 
 priv_dir(App)->
     case code:priv_dir(App) of
@@ -14,7 +16,12 @@ priv_dir(App)->
     end.
 
 init() ->
-    ok = erlang:load_nif(priv_dir(metronome)++"/metronome_drv", 0), true.
+    case metronome_db:is_loaded() of
+        false -> erlang:load_nif(priv_dir(metronome)++"/metronome_drv", 0), true;
+        true -> true
+    end.
 
 update(_key, _incr, _ttl, _timestamp_now)-> {error, nif_not_loaded}.
 gc(_timestamp_now) -> ok.
+is_loaded() -> false.
+clear() -> ok.
