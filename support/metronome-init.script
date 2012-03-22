@@ -1,0 +1,14 @@
+#!/bin/sh
+#
+# chkconfig:	2345 12 99
+# description: metronome
+
+PATH=/sbin:/bin:/usr/bin:/usr/sbin
+
+# Source function library.
+. /etc/rc.d/init.d/functions
+
+export HOME=/usr/local/metronome/data
+
+echo -n $"${1}ing metronome: "
+exec /usr/local/metronome/bin/metronome $1

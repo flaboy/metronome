@@ -43,9 +43,9 @@ release: all
 	$(REBAR) generate
 	
 install:
-	$(INSTALL) -d @prefix@ @bindir@
-	cp -r rel/metronome @prefix@
-	$(INSTALL) metronomed @bindir@
+	$(INSTALL) -d ${DESTDIR}@prefix@ ${DESTDIR}@bindir@
+	cp -r rel/metronome ${DESTDIR}@prefix@
+	$(INSTALL) metronomed ${DESTDIR}@bindir@
 	
 start: all
 	exec erl -pa ebin deps/*/ebin -boot start_sasl \
