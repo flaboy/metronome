@@ -1,0 +1,63 @@
+CC      := @CC@
+CFLAGS  := @CFLAGS@ @DEFS@
+
+LD_SHARED       := @LD_SHARED@
+
+DESTDIR := 
+prefix := @prefix@
+exec_prefix := @exec_prefix@
+ecae_user := @user@
+bindir := @bindir@
+libexecdir := @libexecdir@
+sysconfdir := @sysconfdir@
+libdir := @libdir@
+includedir := @includedir@
+mandir := @mandir@
+datarootdir = @datarootdir@
+datadir = @datadir@
+INSTALL := @INSTALL@
+ERTS_VSN := @ERLANG_ERTS_VER@
+REBAR := ./rebar
+
+.PHONY: all deps doc test clean release start
+
+all: deps
+	$(REBAR) compile
+
+deps:
+	$(REBAR) get-deps
+
+doc:
+	$(REBAR) doc skip_deps=true
+
+test:
+	$(REBAR) eunit skip_deps=true
+
+clean:
+	$(REBAR) clean
+
+dialyzer: all test
+	dialyzer --src src/*.erl deps/*/src/*.erl
+
+release: all
+	$(REBAR) generate
+	
+install:
+	$(INSTALL) -d @prefix@ @bindir@
+	cp -r rel/metronome @prefix@
+	$(INSTALL) metronomed @bindir@
+	
+start: all
+	exec erl -pa ebin deps/*/ebin -boot start_sasl \
+		-name "metronome" \
+		-config rel/files/app.config \
+		-s metronome \
+		-sasl errlog_type error \
+		-kernel error_logger '{file,"log/error.log"}' \
+		-sasl sasl_error_logger '{file,"log/sasl_error.log"}' \
+		-os_mon start_cpu_sup true \
+		-os_mon start_disksup false \
+		-os_mon start_memsup false \
+		-env ERL_CRASH_DUMP "log/erlang_crash_$$.dump" \
+		+K true \
+		+P 65536

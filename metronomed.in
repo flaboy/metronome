@@ -1,0 +1,2 @@
+#!/bin/sh
+exec @prefix@/metronome/bin/metronome metronome

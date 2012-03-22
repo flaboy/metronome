@@ -1,0 +1,12 @@
+{application, metronome,
+ [
+  {description, ""},
+  {vsn, "1"},
+  {registered, []},
+  {applications, [
+                  kernel,
+                  stdlib
+                 ]},
+  {mod, { metronome_app, []}},
+  {env, []}
+ ]}.

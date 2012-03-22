@@ -1,0 +1,8 @@
+config.log
+ebin/*
+log/*
+priv/*
+config.status
+Makefile
+metronomed
+c_src/*.o

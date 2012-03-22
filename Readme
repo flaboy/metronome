@@ -1,0 +1,42 @@
+tcp/udp: 9528
+
+ +---------+            +---------+                     +-----------+
+ | Client  |            | Server  |                     | Metronome |
+ +---------+            +---------+                     +-----------+
+      |                      |                                |
+      | Service Request      |                                |
+      |--------------------->|                                |
+      |                      |                                |
+      |                      | Query user request times       |
+      |                      |------------------------------->|
+      |                      |                                |
+      |                      |           return request times |
+      |                      |<-------------------------------|
+      |                      | /--------------                |
+      |                      | | check quota |                |
+      |                      | --------------/                |
+      |                      |                                |
+      |       accept or deny |                                |
+      |<---------------------|                                |
+      |                      |                                |
+
+input: key ttl idstr<\n>
+result: count idstr
+
+-------------------------------------------
+> uid=123,api=run 3 requestid=100
+< 1 requestid=100
+
+> uid=123,api=run 3 requestid=101
+< 2 requestid=101
+
+> uid=123,api=run 3 requestid=102
+< 3 requestid=102
+
+> uid=123,api=run 3 requestid=103
+< 4 requestid=103
+
+... 3 seconds...
+
+> uid=123,api=run 3 requestid=104
+< 1 requestid=104
