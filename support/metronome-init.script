@@ -8,7 +8,7 @@ PATH=/sbin:/bin:/usr/bin:/usr/sbin
 # Source function library.
 . /etc/rc.d/init.d/functions
 
-export HOME=/usr/local/metronome/data
+export HOME=/usr/local/metronome
 
 echo -n $"${1}ing metronome: "
 exec /usr/local/metronome/bin/metronome $1
