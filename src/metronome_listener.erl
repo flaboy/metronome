@@ -8,9 +8,9 @@ start_link(Factory, Opts) ->
     gen_server:start_link({local, Factory}, ?MODULE, [Factory, Opts], []).
 
 init([Factory , Opts])->
-    {ok, {Ip, Port}} = application:get_env(Factory),
+    {ok, {Ip, Port}} = application:get_env(tcp_server),
     {ok,Sock} = gen_tcp:listen(Port,[{ip,Ip}|Opts]),
-    Max = case application:get_env(list_to_atom(atom_to_list(Factory)++"_max")) of
+    Max = case application:get_env(tcp_server_max) of
             undefined -> 100;
             {ok, M} -> M
         end,

@@ -6,6 +6,6 @@ start_link()->
     {ok,Pid}.
     
 init()->
-    {ok, {Ip, Port}} = application:get_env(metronome_server),
+    {ok, {Ip, Port}} = application:get_env(udp_server),
     {ok, Sock} = gen_udp:open(Port, [{ip,Ip},list,{active,true},{reuseaddr,true}]),
     metronome_server:loop(Sock).

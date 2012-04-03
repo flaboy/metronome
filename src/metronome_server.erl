@@ -40,7 +40,7 @@ update(L)->
                             {KeyStr, be_int(string:substr(TailStr, 1, M-1)), string:substr(TailStr, M+1)}
                     end
                 end,
-        Value = metronome_db:update(Key, 1, TTL, metronome_timer:now()),
+        {ok, Value, _} = metronome_db:update(Key, 1, TTL, metronome_timer:now()),
         [integer_to_list(Value), $ , Id, $\n]
     catch _:Err->
         erlang:display({?LINE, Err}), "1\n"

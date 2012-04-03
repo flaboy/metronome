@@ -2,6 +2,7 @@
 -export([init/0,
         update/4,
         gc/1,
+        lookup/2,
         clear/0,
         is_loaded/0]).
 
@@ -22,6 +23,7 @@ init() ->
     end.
 
 update(_key, _incr, _ttl, _timestamp_now)-> {error, nif_not_loaded}.
+lookup(_key, _timestamp_now)-> {error, nif_not_loaded}.
 gc(_timestamp_now) -> ok.
 is_loaded() -> false.
 clear() -> ok.

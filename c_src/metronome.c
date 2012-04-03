@@ -63,7 +63,7 @@ struct metronome_item * find_in_hash(char * key, int timestamp){
 //key, incr, ttl, timestamp
 static ERL_NIF_TERM update(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]){
     
-    int ttl=0, timestamp=0, incr=0;
+    int ttl=0, timestamp=0, incr=0, next=0;
     CHECK(enif_get_string(env, argv[0], keybuff, KEY_MAX_LEN, ERL_NIF_LATIN1)); 
     CHECK(enif_get_int(env, argv[1], &incr));
     CHECK(enif_get_int(env, argv[2], &ttl));
@@ -74,17 +74,47 @@ static ERL_NIF_TERM update(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]){
     
     if(item->timestamp + ttl > timestamp){
         item->value += incr;
+        next = item->timestamp + ttl - timestamp;
     }else{
-        item->value = 1;
+        item->value = incr;
         item->timestamp = timestamp;
+        next = ttl;
     }
 
     //
-    return enif_make_int(env, item->value);
+    return enif_make_tuple3(env,
+        enif_make_atom(env, "ok"),
+        enif_make_int(env, item->value),
+        enif_make_int(env, next)
+        );
+}
+
+static ERL_NIF_TERM lookup(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]){
+    
+    int timestamp=0, next=0, value=0;
+    CHECK(enif_get_string(env, argv[0], keybuff, KEY_MAX_LEN, ERL_NIF_LATIN1)); 
+    CHECK(enif_get_int(env, argv[1], &timestamp));
+    
+    metronome_item * item = find_in_hash(keybuff, timestamp);
+    
+    if(item->timestamp + item->ttl > timestamp){
+        next = item->timestamp + item->ttl - timestamp;
+        value = item->value;
+    }else{
+        next = item->ttl;
+        value = 0;
+    }
+
+    //
+    return enif_make_tuple3(env,
+        enif_make_atom(env, "ok"),
+        enif_make_int(env, value),
+        enif_make_int(env, next)
+        );
 }
 
 static ERL_NIF_TERM gc(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]){
-    int i=0 , rt=0 , timestamp = 0;
+    int i=0 , timestamp = 0;
     CHECK(enif_get_int(env, argv[0], &timestamp));
     for(i=0;i<BUCKET_SIZE;i++){
         if(hashmap[i]>0){
@@ -95,7 +125,7 @@ static ERL_NIF_TERM gc(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]){
 }
 
 static ERL_NIF_TERM clear(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]){
-    int i=0 , rt=0 , timestamp = 0;
+    int i=0;
     for(i=0;i<BUCKET_SIZE;i++){
         if(hashmap[i]>0){
             walk_hash(&hashmap[i],0,NULL, 1);
@@ -110,6 +140,7 @@ static ERL_NIF_TERM is_loaded(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[
 
 static ErlNifFunc nif_funcs[] = {
     {"update", 4, update},
+    {"lookup", 2, lookup},
     {"gc", 1, gc},
     {"clear", 0, clear},
     {"is_loaded", 0, is_loaded}
