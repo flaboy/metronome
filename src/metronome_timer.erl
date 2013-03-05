@@ -41,4 +41,4 @@ week(3)-> <<"Wed">>;
 week(4)-> <<"Thu">>;
 week(5)-> <<"Fri">>;
 week(6)-> <<"Sat">>;
-week(0)-> <<"Sun">>.
+week(7)-> <<"Sun">>.
