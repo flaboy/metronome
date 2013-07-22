@@ -31,9 +31,8 @@ now(str)->
 
 time_now_str()->
     {{Y,M, D}, {H,I,S}} = calendar:local_time(),
-    Wdy = week(calendar:day_of_the_week({Y, M, D})),
-    io_lib:format("~s ~2.10.0B-~2.10.0B-~4.10.0B ~2.10.0B:~2.10.0B:~2.10.0B GMT", 
-        [Wdy, D, M, Y, H, I, S]).
+    io_lib:format("~4.10.0B-~2.10.0B-~2.10.0B::~2.10.0B:~2.10.0B:~2.10.0B", 
+        [Y, M, D, H, I, S]).
 
 week(1)-> <<"Mon">>;
 week(2)-> <<"Tur">>;
@@ -41,4 +40,5 @@ week(3)-> <<"Wed">>;
 week(4)-> <<"Thu">>;
 week(5)-> <<"Fri">>;
 week(6)-> <<"Sat">>;
+week(7)-> <<"Sun">>;
 week(0)-> <<"Sun">>.
